@@ -64,7 +64,7 @@ class FlutterDevice {
          fileSystemScheme: buildInfo.fileSystemScheme,
          targetModel: targetModel,
          dartDefines: buildInfo.dartDefines,
-         packagesPath: buildInfo.packagesPath,
+         packagesPath: buildInfo.packageConfigPath,
          frontendServerStarterPath: buildInfo.frontendServerStarterPath,
          extraFrontEndOptions: buildInfo.extraFrontEndOptions,
          artifacts: globals.artifacts!,
@@ -164,7 +164,7 @@ class FlutterDevice {
         dartDefines: buildInfo.dartDefines,
         librariesSpec: globals.fs.file(globals.artifacts!
           .getHostArtifact(HostArtifact.flutterWebLibrariesJson)).uri.toString(),
-        packagesPath: buildInfo.packagesPath,
+        packagesPath: buildInfo.packageConfigPath,
         artifacts: globals.artifacts!,
         processManager: globals.processManager,
         logger: globals.logger,
@@ -197,7 +197,7 @@ class FlutterDevice {
           extraFrontEndOptions: extraFrontEndOptions,
         ),
         assumeInitializeFromDillUpToDate: buildInfo.assumeInitializeFromDillUpToDate,
-        packagesPath: buildInfo.packagesPath,
+        packagesPath: buildInfo.packageConfigPath,
         artifacts: globals.artifacts!,
         processManager: globals.processManager,
         logger: globals.logger,
@@ -914,12 +914,10 @@ abstract class ResidentHandlers {
     final Brightness? current = await flutterDevices.first!.vmService!.flutterBrightnessOverride(
       isolateId: views.first.uiIsolate!.id!,
     );
-    Brightness next;
-    if (current == Brightness.light) {
-      next = Brightness.dark;
-    } else {
-      next = Brightness.light;
-    }
+    final Brightness next = switch (current) {
+      Brightness.light => Brightness.dark,
+      Brightness.dark || null => Brightness.light,
+    };
     for (final FlutterDevice? device in flutterDevices) {
       final List<FlutterView> views = await device!.vmService!.getFlutterViews();
       for (final FlutterView view in views) {
@@ -1105,7 +1103,7 @@ abstract class ResidentRunner extends ResidentHandlers {
     this.machine = false,
     ResidentDevtoolsHandlerFactory devtoolsHandler = createDefaultHandler,
   }) : mainPath = globals.fs.file(target).absolute.path,
-       packagesFilePath = debuggingOptions.buildInfo.packagesPath,
+       packagesFilePath = debuggingOptions.buildInfo.packageConfigPath,
        projectRootPath = projectRootPath ?? globals.fs.currentDirectory.path,
        _dillOutputPath = dillOutputPath,
        artifactDirectory = dillOutputPath == null
